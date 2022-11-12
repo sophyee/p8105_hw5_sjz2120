@@ -26,6 +26,7 @@ Make a spaghetti plot showing observations on each subject over time, and commen
 
 
 # Problem 2
+
 The Washington Post has gathered data on homicides in 50 large U.S. cities and made the data available through a GitHub repository.
 
 ```{r homicides-raw-data}
@@ -41,7 +42,19 @@ homicides
 
 
 ### Describing the raw data
-[]
+The raw `homicides` dataset from the Washington Post contains `r nrows(homicides)` rows/observations and `r ncols(homicides)` columns/variables. The `r ncols(homicides)` key variables in this dataset include: `r colnames(homicides)`:
+
+* `uid` -- a unique ID for each observation
+
+* The `reported_date` of each homicide (yearmonthday)
+
+* `victim_last` and `victim_first` -- the last and first name of each homicide victim
+
+* Demographic information for each homicide victim, including their race (`victim_race`), age (`victim_age`), sex (`victim_sex`)
+
+* The location of each homicide incident, including the `city` and `state` as well as the latitude and longitude (`lat` and `lon`)
+
+* `disposition` -- the status of each homicide case (case closed/open and arrest status)
 
 
 ### Cleaning the city homicides dataset
