@@ -27,11 +27,14 @@ Make a spaghetti plot showing observations on each subject over time, and commen
 
 # Problem 2
 
-The Washington Post has gathered data on homicides in 50 large U.S. cities and made the data available through a GitHub repository.
+The Washington Post has gathered data on homicides in 50 large U.S. cities and made the data available through a GitHub repository. Let's load in the raw dataset:
 
 ```{r homicides-raw-data}
+wp_homicides_url = "https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv"
+
 homicides =
-  read_csv("https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv") %>% # Read in the raw csv dataset
+  read_csv(wp_homicides_url,
+           col_types = c("c", "c", "c", "c", "c", "n", "c", "c", "c", "d", "d", "c")) %>% # Read in the raw csv dataset
   janitor::clean_names() %>%
   mutate(victim_age = as.numeric(victim_age),
          reported_date = as.character(reported_date),
@@ -42,6 +45,9 @@ homicides
 
 
 ### Describing the raw data
+
+The Washington Post has gathered data on homicides in 50 large U.S. cities and made the data available through a GitHub repository.
+
 The raw `homicides` dataset from the Washington Post contains `r nrows(homicides)` rows/observations and `r ncols(homicides)` columns/variables. The `r ncols(homicides)` key variables in this dataset include: `r colnames(homicides)`:
 
 * `uid` -- a unique ID for each observation
@@ -58,9 +64,22 @@ The raw `homicides` dataset from the Washington Post contains `r nrows(homicides
 
 
 ### Cleaning the city homicides dataset
-Create a city_state variable (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
-```{r homicides-data-cleaning}
 
+Now, let's create a `city_state` variable combining the `city` and `state` variables (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
+
+Below is a table showing the total number of homicides and the number of unsolved homicides in each city.
+
+```{r homicides-by-city}
+homicides = homicides %>%
+  mutate(city_state = paste(city, state, sep = ", "))
+
+homicides_city_table = homicides %>%
+  group_by(city_state) %>%
+  summarise(n_homicides = length(city_state),
+            n_unsolved = sum(disposition %in% c("Closed without arrest", "Open/No arrest"))) %>%
+  knitr::kable(col.names = c('City, State', 'Number of Homicides', 'Number Unsolved'))
+  
+homicides_city_table
 ```
 
 
