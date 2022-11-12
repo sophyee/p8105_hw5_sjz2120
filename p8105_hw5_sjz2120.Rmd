@@ -4,9 +4,12 @@ author: "Sophie Zhang (sjz2120)"
 date: "2022-11-05"
 output: github_document
 ---
+
 ```{r setup, include=FALSE}
 library(tidyverse)
-library(ggplot2)
+library(rvest)
+
+set.seed(1)
 ```
 
 
@@ -21,16 +24,43 @@ Tidy the result; manipulate file names to include control arm and subject ID, ma
 Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
 
 
-# Problem 2
-The Washington Post has gathered data on homicides in 50 large U.S. cities and made the data available through a GitHub repository here. You can read their accompanying article here.
 
-Describe the raw data. Create a city_state variable (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
+# Problem 2
+The Washington Post has gathered data on homicides in 50 large U.S. cities and made the data available through a GitHub repository.
+
+```{r homicides-raw-data}
+homicides =
+  read_csv("https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv") %>% # Read in the raw csv dataset
+  janitor::clean_names() %>%
+  mutate(victim_age = as.numeric(victim_age),
+         reported_date = as.character(reported_date),
+         reported_date = as.Date(reported_date, "%Y%m%d")) # Change variable types for `reported_date` and `age`
+
+homicides
+```
+
+
+### Describing the raw data
+[]
+
+
+### Cleaning the city homicides dataset
+Create a city_state variable (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
+```{r homicides-data-cleaning}
+
+```
+
+
+### Estimating the proportion of unsolved homicides in Baltimore, MD
 
 For the city of Baltimore, MD, use the prop.test function to estimate the proportion of homicides that are unsolved; save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe.
 
 Now run prop.test for each of the cities in your dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Do this within a “tidy” pipeline, making use of purrr::map, purrr::map2, list columns and unnest as necessary to create a tidy dataframe with estimated proportions and CIs for each city.
 
+
+### Plot of unsolved homicide estimates & CIs for major cities in the US
 Create a plot that shows the estimates and CIs for each city – check out geom_errorbar for a way to add error bars based on the upper and lower limits. Organize cities according to the proportion of unsolved homicides.
+
 
 
 # Problem 3
