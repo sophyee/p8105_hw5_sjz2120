@@ -221,7 +221,7 @@ test_power %>%
        subtitle = "Based on 5000 simulations for a random normal sample with μ={0, 1, 2, 3, 4, 5, 6}",
        x = "True population mean (μ)",
        y = "Proportion of times the null was rejected (Power)")  +
-  theme(plot.title = element_text(size = 11, hjust = 0.5),
+  theme(plot.title = element_text(size = 15, hjust = 0.5),
         plot.subtitle = element_text(size = 10, hjust = 0.5),
         axis.text.x = element_text(size = 7),
         axis.text.y = element_text(size = 7))
@@ -229,6 +229,15 @@ test_power %>%
 
 
 ### Plot showing the average estimate μ̂ vs the true value of μ
-Make a plot showing the average estimate of μ̂  on the y axis and the true value of μ on the x axis. Make a second plot (or overlay on the first) the average estimate of μ̂  only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. Is the sample average of μ̂  across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?
 
+Below is a plot showing the average estimate of μ on the y axis and the true value of μ on the x axis, separated into two lines -- one for all samples and one for only those samples for which the null was rejected.
 
+```{r}
+# Let's create a dataframe called `test_power` based on `mu_simulations` in the previous code chunk, which contains the proportion of times the null was rejected (the power of the test) by mu_value
+test_estimates = mu_simulations %>%
+  group_by(mu_value) %>%
+  summarise(mu_estim_all = mean(),
+            mu_estim_reject = mean())
+```
+
+Is the sample average of μ̂  across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?
