@@ -154,7 +154,7 @@ First we create a function `simulate()` to simulate one-sample t-tests (H:μ=0 u
 We then use a `for` loop to generate 5000 datasets from the model and do a t-test for each of them. The outputs (estimate and p-value) of these 5000 t-tests are saved to a tidied table called `simulations`.
 
 ```{r simulation-t-test}
-#Let's create a function called `simulate` that carries out a one-sample t-test
+#Let's create a function called `simulate` that carries out a one-sample t-test on a random normal sample
 simulate = function(n = 30, sigma = 5, mu = 0) {
   input =  rnorm(n, mean = mu, sd = sigma)
   t_test = t.test(input, conf.int = 0.95) %>%
@@ -164,29 +164,29 @@ simulate = function(n = 30, sigma = 5, mu = 0) {
   t_test
 }
 
+# Let's simulate the results of taking a t-test on a random normal sample with n=30, σ=5, μ=0, 5000 times
 simulations = vector("list", 5000)
 for (i in 1:5000) {
   simulations[[i]] = simulate()
 }
 simulations = simulations %>%
   bind_rows()
-simulations
+
+simulations %>% head()
 ```
 
 Now, let's use this function and repeat the above simulation process for any μ (in this case, let's look at μ={0, 1, 2, 3, 4, 5, 6}):
 
 ```{r simulations-diffr-mu}
+# Let's use simulate() and repeat this process 5000 times for a range of mu_values
 mu_simulations = 
-  tibble(mu_range = c(0, 1, 2, 3, 4, 5, 6)) %>%
-  mutate()
-  
-  vector("list", 5000)
-for (i in 1:5000) {
-  mu_simulations[[i]] = simulate(n = 30, sigma = 5, mu = c(0, 1, 2, 3, 4, 5, 6))
-}
-mu_simulations = mu_simulations %>%
-  bind_rows()
-mu_simulations
+  tibble(mu_value = c(0, 1, 2, 3, 4, 5, 6)) %>%
+  mutate(output = map(.x = mu_value, ~rerun(5000, simulate(mu = mu_value))),
+         estimates_table = map(output, bind_rows)) %>%
+  select(-output) %>%
+  unnest(estimates_table)
+
+mu_simulations %>% head()
 ```
 
 
@@ -196,18 +196,16 @@ Below is a plot showing the proportion of times the null was rejected (the power
 * **From the plot below, we see that as the true value of μ (the effect size) increases, the power of the text decreases.**
 
 ```{r}
-test_power =
-  tibble(
-    mu_values = c(0, 1, 2, 3, 4, 5, 6),
-    mu_simulations = map(mu_values, mu_simulate)
-  ) %>%
-  unnest(mu_simulations) %>%
-  filter(p_value < 0.05) %>%
-  count()
+# Let's add a variable to `mu_simulations` called `reject_null`, which records whether the resulting `p.value` is < 0.05 (i.e. the null hypothesis is rejected)
+mu_simulations = mu_simulations %>%
+  mutate(reject_null = ifelse(p.value < 0.05, TRUE, FALSE))
 
+mu_simulations %>%
+  group_by(mu_value) %>%
+  summarise(reject_null_prop = reject_null / n())
 ```
 ```{r}
-test_power
+
 ```
 
 
