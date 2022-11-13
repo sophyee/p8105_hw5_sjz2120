@@ -113,7 +113,8 @@ unsolved_prop_all = homicides_by_city %>%
     estim_output = map(.x = prop_test, ~broom::tidy(.x))
     ) %>% 
   select(-prop_test) %>% 
-  unnest(estim_output)
+  unnest(estim_output) %>%
+  select(city_state, n_homicides, n_unsolved, estimate_prop = estimate, conf.low, conf.high)
 
 unsolved_prop_all
 ```
