@@ -72,7 +72,7 @@ homicides_by_city = homicides %>%
             n_unsolved = sum(disposition %in% c("Closed without arrest", "Open/No arrest")))
 
 homicides_city_table = homicides_by_city %>%
-  knitr::kable(col.names = c('City, State', 'Number of Homicides', 'Number Unsolved'))
+  knitr::kable(col.names = c('City, State', 'Total Homicides', 'Number Unsolved'))
   
 homicides_city_table
 ```
@@ -80,7 +80,7 @@ homicides_city_table
 
 ### Estimating the proportion of unsolved homicides in Baltimore, MD
 
-Below, I use the `prop.test` function to estimate the proportion of homicides that are unsolved in the city of Baltimore, MD. The output of prop.test is saved as a tidy dataframe called `unsolved_balt`.
+Below, I use the `prop.test` function to estimate the proportion of homicides that are unsolved in the city of Baltimore, MD. The output of prop.test is saved as a tidy dataframe called `unsolved_prop_balt`.
 
 ```{r estim-baltimore}
 balt_unsolved = homicides_by_city %>% 
@@ -90,7 +90,7 @@ balt_total = homicides_by_city %>%
   filter(city_state == "Baltimore, MD") %>%
   pull(n_homicides) # Number of total homicides in Baltimore
 
-unsolved_balt = prop.test(x = balt_unsolved, n = balt_total) %>%
+unsolved_prop_balt = prop.test(x = balt_unsolved, n = balt_total) %>%
                 broom::tidy()
 ```
 
@@ -103,17 +103,19 @@ From this new dataframe `unsolved_balt`, we pull the values for the estimated pr
 
 Let's run `prop.test` for each of the cities in the `homicides_by_city` dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Below, I do this within a “tidy” pipeline, making use of purrr::map, purrr::map2, to create a tidy dataframe with estimated proportions and CIs for each city.
 
-The resulting dataframe with estimated proportions and CIs of unsolved homicides for each city is saved as `unsolved_all`.
+The resulting dataframe with estimated proportions and CIs of unsolved homicides for each city is saved as `unsolved_prop_all`.
 
-```{r estim-all-cities}
-city_unsolved = homicides_by_city %>% pull(n_unsolved)
-city_total = homicides_by_city %>% pull(n_homicides)
 
-unsolved_all = prop.test(x = city_unsolved,
-                         n = city_total) %>%
-                broom::tidy()
+```{r}
+unsolved_prop_all = homicides_by_city %>% 
+  mutate( 
+    prop_test = map2(.x = n_unsolved, .y = n_homicides, ~prop.test(x = .x, n = .y)),
+    estim_output = map(.x = prop_test, ~broom::tidy(.x))
+    ) %>% 
+  select(-prop_test) %>% 
+  unnest(estim_output)
 
-unsolved_all
+unsolved_prop_all
 ```
 
 
