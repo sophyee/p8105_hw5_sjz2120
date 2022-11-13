@@ -63,7 +63,7 @@ The raw `homicides` dataset from the Washington Post contains `r nrows(homicides
 * `disposition` -- the status of each homicide case (case closed/open and arrest status)
 
 
-### Cleaning the city homicides dataset
+### Homicides numbers and unsolved homicides by city
 
 Now, let's create a `city_state` variable combining the `city` and `state` variables (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
 
@@ -87,14 +87,28 @@ homicides_city_table
 
 ### Estimating the proportion of unsolved homicides in Baltimore, MD
 
-For the city of Baltimore, MD, use the prop.test function to estimate the proportion of homicides that are unsolved; save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe.
+Below, I use the `prop.test` function to estimate the proportion of homicides that are unsolved in the city of Baltimore, MD. The output of prop.test is saved as a tidy dataframe called `unsolved_balt`.
 
-```{r}
+```{r estim-baltimore}
+unsolved_balt = homicides_by_city %>%
+  filter(city_state == "Baltimore, MD") %>%
+  select(n_homicides, n_unsolved)
 
+unsolved_balt = prop.test(x = unsolved_balt$n_unsolved,
+                          n = unsolved_balt$n_homicides) %>%
+                broom::tidy()
 ```
+
+From this new dataframe `unsolved_balt`, we pull the values for the estimated proportion and 95% CI of unsolved homicides in Baltimore using inline R:
+
+* **The estimated proportion of unsolved homicides in Baltimore, MD is `r unsolved_balt %>% pull(estimate)` (95% CI: `r unsolved_balt %>% pull(conf.low)`, `r unsolved_balt %>% pull(conf.high)`**
 
 
 Now run prop.test for each of the cities in your dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Do this within a “tidy” pipeline, making use of purrr::map, purrr::map2, list columns and unnest as necessary to create a tidy dataframe with estimated proportions and CIs for each city.
+
+```{r estim-all-cities}
+unsolved_all = homicides_by_city
+```
 
 
 ### Plot of unsolved homicide estimates & CIs for major cities in the US
