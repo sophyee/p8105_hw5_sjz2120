@@ -237,21 +237,21 @@ Below is a plot showing the average estimate of μ on the y axis and the true va
 # Let's create a dataframe called `test_power` based on `mu_simulations` in the previous code chunk, which contains the proportion of times the null was rejected (the power of the test) by mu_value
 test_estimates_all = mu_simulations %>%
   group_by(mu_value) %>%
-  summarise(avg_estim_all = mean(estimate)) %>%
-  ggplot(aes(x = mu_value, y = avg_estim_all)) +
-  geom_point() +
-  geom_smooth()
+  summarise(avg_estim = mean(estimate))
 
 test_estimates_reject = mu_simulations %>%
   group_by(mu_value) %>%
   filter(reject_null == TRUE) %>%
-  summarise(avg_estim_reject = mean(estimate)) %>%
-  ggplot(aes(x = mu_value, y = avg_estim_reject)) +
+  summarise(avg_estim = mean(estimate))
+
+test_est_combine =
+  ggplot(data = test_estimates_all, aes(x = mu_value, y = avg_estim)) +
   geom_point() +
-  geom_smooth()
+  geom_smooth() +
+  geom_point(data = test_estimates_reject, color = "green") +
+  geom_smooth(data = test_estimates_reject, color = "green")
 
-
-test_estimates_all + test_estimates_reject
+test_est_combine
 ```
 
 Is the sample average of μ̂  across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?
