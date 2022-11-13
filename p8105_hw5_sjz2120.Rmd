@@ -130,17 +130,17 @@ Create a plot that shows the estimates and CIs for each city – check out geom_
 homicides_city_plot = unsolved_prop_all %>%
   mutate(city_state = fct_reorder(city_state, estimate_prop)) %>%
   ggplot(aes(x = city_state, y = estimate_prop, color = city_state)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
-  labs(title = "Estimated proportions (and 95% Confidence Intervals) of unsolved homicides, by city",
-       subtitle = "For 50 major cities in the U.S.",
-       x = "City (City, State)",
-       y = "Estimated proportion of unsolved homicides (with 95% CI)") +
-  theme(plot.title = element_text(size = 11, hjust = 0.5),
-        plot.subtitle = element_text(size = 10, hjust = 0.5),
-        axis.text.x = element_text(size = 7, angle = 45, hjust = 1),
-        axis.text.y = element_text(size = 7, hjust = 0.5),
-        legend.position = "none")
+    geom_point() +
+    geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
+    labs(title = "Estimated proportions (and 95% Confidence Intervals) of unsolved homicides, by city",
+          subtitle = "For 50 major cities in the U.S.",
+          x = "City (City, State)",
+          y = "Estimated proportion of unsolved homicides (with 95% CI)") +
+    theme(plot.title = element_text(size = 11, hjust = 0.5),
+          plot.subtitle = element_text(size = 10, hjust = 0.5),
+          axis.text.x = element_text(size = 7, angle = 45, hjust = 1),
+          axis.text.y = element_text(size = 7, hjust = 0.5),
+          legend.position = "none")
 
 homicides_city_plot
 ```
@@ -214,15 +214,15 @@ test_power = mu_simulations %>%
   summarise(reject_null_prop = sum(reject_null) / 5000)
 
 # Now we can create a plot showing the power of the test at each mu value from μ={0, 1, 2, 3, 4, 5, 6}
-test_power %>%
+test_power_plot %>%
   ggplot(aes(x = mu_value, y = reject_null_prop)) +
-  geom_point(alpha = 0.5, size = 3) +
-  geom_smooth(alpha = 0.5) +
-  labs(title = "The relationship between effect size and power for a one-sample t-test",
-       subtitle = "Based on 5000 simulations for a random normal sample with μ={0, 1, 2, 3, 4, 5, 6}",
-       x = "True population mean (μ)",
-       y = "Proportion of times the null was rejected (Power)")  +
-  theme(plot.title = element_text(size = 15, hjust = 0.5),
+    geom_point(alpha = 0.5, size = 3) +
+    geom_smooth(alpha = 0.5) +
+    labs(title = "The relationship between effect size and power for a one-sample t-test",
+        subtitle = "Based on 5000 simulations for a random normal sample with μ={0, 1, 2, 3, 4, 5, 6}",
+        x = "True population mean (μ)",
+        y = "Proportion of times the null was rejected (Power)")  +
+    theme(plot.title = element_text(size = 15, hjust = 0.5),
         plot.subtitle = element_text(size = 10, hjust = 0.5),
         axis.text.x = element_text(size = 7),
         axis.text.y = element_text(size = 7))
@@ -246,12 +246,37 @@ test_estimates_reject = mu_simulations %>%
 
 test_est_combine =
   ggplot(data = test_estimates_all, aes(x = mu_value, y = avg_estim)) +
-  geom_point() +
-  geom_smooth() +
-  geom_point(data = test_estimates_reject, color = "green") +
-  geom_smooth(data = test_estimates_reject, color = "green")
+    geom_point() +
+    geom_smooth() +
+    geom_point(data = test_estimates_reject, color = "green") +
+    geom_smooth(data = test_estimates_reject, color = "green")
 
 test_est_combine
 ```
+
+```{r}
+test_estimates_all = mu_simulations %>%
+  group_by(mu_value) %>%
+  summarise(avg_estim_all = mean(estimate))
+
+test_estimates_reject = mu_simulations %>%
+  group_by(mu_value) %>%
+  filter(reject_null == TRUE) %>%
+  summarise(avg_estim_reject = mean(estimate))
+
+test_estimates_combine =
+  full_join(test_estimates_all, test_estimates_reject, by = "mu_value") %>%
+  pivot_longer(
+    avg_estim_all:avg_estim_reject,
+    names_to = "sample",
+    names_prefix = "avg_estim_",
+    values_to = "avg_estim")
+
+estim_true_plot =
+  test_estimates_combine %>%
+  ggplot(aes(x = mu_value, y = avg_estim, group = sample)) +
+    geom_point 
+```
+
 
 Is the sample average of μ̂  across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?
