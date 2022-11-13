@@ -9,6 +9,8 @@ output: github_document
 library(tidyverse)
 library(rvest)
 
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
 set.seed(1)
 ```
 
@@ -203,41 +205,28 @@ mu_simulations =
 Below is a plot showing the proportion of times the null was rejected (the power of the test, in this case when the p-value < 0.05) on the y axis and the true value of μ on the x axis.
 
 * **From the plot below, we see that as the true value of μ (the effect size) increases, the power of the test increases until it plateaus.**
-```{r}
- tibble(mu_value = c(0, 1, 2, 3, 4, 5, 6)) %>%
-  mutate(output = map(.x = mu_value, ~rerun(5000, simulate(mu = mu_value))),
-         estimates_table = map(output, bind_rows)) %>%
-  unnest(estimates_table)
-
-mu_simulations = mu_simulations %>%
-  mutate(reject_null = ifelse(p.value < 0.05, TRUE, FALSE))
-
-group_by(mu_value) %>%
-  summarise(reject_null_prop = (sum(reject_null) / 5000)) %>%
-```
-
 
 ```{r plot-showing-power}
-# Let's add a variable to `mu_simulations` called `reject_null`, which records whether the resulting `p.value` is < 0.05 (i.e. the null hypothesis is rejected)
-
+# Let's create a dataframe called `test_power` based on `mu_simulations` in the previous code chunk, which contains the proportion of times the null was rejected (the power of the test) by mu_value
 test_power = mu_simulations %>%
   group_by(mu_value) %>%
   summarise(reject_null_prop = sum(reject_null) / 5000)
 
+# Now we can create a plot showing the power of the test at each mu value from μ={0, 1, 2, 3, 4, 5, 6}
 test_power %>%
   ggplot(aes(x = mu_value, y = reject_null_prop)) +
-  geom_point(alpha = .5, size = 3) +
-  geom_smooth(alpha = .5) +
-  labs(title = "",
-       subtitle = "",
-       x = "",
-       y = "")  +
+  geom_point(alpha = 0.5, size = 3) +
+  geom_smooth(alpha = 0.5) +
+  labs(title = "The relationship between effect size and power for a one-sample t-test",
+       subtitle = "Based on 5000 simulations for a random normal sample with μ={0, 1, 2, 3, 4, 5, 6}",
+       x = "True population mean (μ)",
+       y = "Proportion of times the null was rejected (Power)")  +
   theme(plot.title = element_text(size = 11, hjust = 0.5),
-        plot.subtitle = element_text(size = 10, hjust = 0.5))
+        plot.subtitle = element_text(size = 10, hjust = 0.5),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7))
 ```
-```{r}
 
-```
 
 
 ### Plot showing the average estimate μ̂ vs the true value of μ
