@@ -96,9 +96,9 @@ unsolved_prop_balt = prop.test(x = balt_unsolved, n = balt_total) %>%
                 broom::tidy()
 ```
 
-From this new dataframe `unsolved_balt`, we pull the values for the estimated proportion and 95% CI of unsolved homicides in Baltimore using inline R:
+From this new dataframe `unsolved_prop_balt`, we pull the values for the estimated proportion and 95% CI of unsolved homicides in Baltimore using inline R:
 
-* **The estimated proportion of unsolved homicides in Baltimore, MD is `r unsolved_balt %>% pull(estimate) %>% round(4)` (95% CI: `r unsolved_balt %>% pull(conf.low) %>% round(4)`, `r unsolved_balt %>% pull(conf.high) %>% round(4)`)**
+* **The estimated proportion of unsolved homicides in Baltimore, MD is `r unsolved_prop_balt %>% pull(estimate) %>% round(4)` (95% CI: `r unsolved_prop_balt %>% pull(conf.low) %>% round(4)`, `r unsolved_prop_balt %>% pull(conf.high) %>% round(4)`)**
 
 
 ### Estimating the proportion of unsolved homicides for all 50 cities
@@ -226,7 +226,6 @@ test_power %>%
         axis.text.x = element_text(size = 7),
         axis.text.y = element_text(size = 7))
 ```
-
 
 
 ### Plot showing the average estimate μ̂ vs the true value of μ
