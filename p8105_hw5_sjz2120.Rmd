@@ -234,40 +234,19 @@ test_power_plot %>%
 Below is a plot showing the average estimate of μ on the y axis and the true value of μ on the x axis, separated into two lines -- one for all samples and one for only those samples for which the null was rejected.
 
 ```{r}
-# Let's create a dataframe called `test_power` based on `mu_simulations` in the previous code chunk, which contains the proportion of times the null was rejected (the power of the test) by mu_value
 test_estimates_all = mu_simulations %>%
   group_by(mu_value) %>%
-  summarise(avg_estim = mean(estimate))
+  summarise(avg_estim_all_samples = mean(estimate))
 
 test_estimates_reject = mu_simulations %>%
   group_by(mu_value) %>%
   filter(reject_null == TRUE) %>%
-  summarise(avg_estim = mean(estimate))
-
-test_est_combine =
-  ggplot(data = test_estimates_all, aes(x = mu_value, y = avg_estim)) +
-    geom_point() +
-    geom_smooth() +
-    geom_point(data = test_estimates_reject, color = "green") +
-    geom_smooth(data = test_estimates_reject, color = "green")
-
-test_est_combine
-```
-
-```{r}
-test_estimates_all = mu_simulations %>%
-  group_by(mu_value) %>%
-  summarise(avg_estim_all = mean(estimate))
-
-test_estimates_reject = mu_simulations %>%
-  group_by(mu_value) %>%
-  filter(reject_null == TRUE) %>%
-  summarise(avg_estim_reject = mean(estimate))
+  summarise(avg_estim_reject_null = mean(estimate))
 
 test_estimates_combine =
   full_join(test_estimates_all, test_estimates_reject, by = "mu_value") %>%
   pivot_longer(
-    avg_estim_all:avg_estim_reject,
+    avg_estim_all_samples:avg_estim_reject_null,
     names_to = "sample",
     names_prefix = "avg_estim_",
     values_to = "avg_estim")
@@ -275,7 +254,18 @@ test_estimates_combine =
 estim_true_plot =
   test_estimates_combine %>%
   ggplot(aes(x = mu_value, y = avg_estim, group = sample)) +
-    geom_point 
+    geom_point(aes(color = sample), alpha = 0.5) +
+    geom_smooth(aes(color = sample), alpha = 0.5) +
+    labs(title = "Comparing the true population vs. the average estimate mean",
+         subtitle = "Between all samples and samples where the null is rejected",
+         x = "True population mean (μ)",
+         y = "The average estimate of μ (μ^)") +
+    theme(plot.title = element_text(size = 15, hjust = 0.5),
+        plot.subtitle = element_text(size = 10, hjust = 0.5),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7))
+
+estim_true_plot
 ```
 
 
