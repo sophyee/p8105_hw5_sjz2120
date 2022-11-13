@@ -39,8 +39,6 @@ homicides =
   mutate(victim_age = as.numeric(victim_age),
          reported_date = as.character(reported_date),
          reported_date = as.Date(reported_date, "%Y%m%d")) # Change variable types for `reported_date` and `age`
-
-homicides
 ```
 
 
@@ -48,18 +46,13 @@ homicides
 
 The Washington Post has gathered data on homicides in 50 large U.S. cities and made the data available through a GitHub repository.
 
-The raw `homicides` dataset from the Washington Post contains `r nrows(homicides)` rows/observations and `r ncols(homicides)` columns/variables. The `r ncols(homicides)` key variables in this dataset include: `r colnames(homicides)`:
+The raw `homicides` dataset from the Washington Post contains `r nrow(homicides)` rows/observations and `r ncol(homicides)` columns/variables. Each of the `r nrow(homicides)` rows represents a homicide. The `r ncol(homicides)` key variables in this dataset include: `r colnames(homicides)`:
 
 * `uid` -- a unique ID for each observation
-
-* The `reported_date` of each homicide (yearmonthday)
-
+* `reported_date` -- the reported date of each homicide (yearmonthday)
 * `victim_last` and `victim_first` -- the last and first name of each homicide victim
-
 * Demographic information for each homicide victim, including their race (`victim_race`), age (`victim_age`), sex (`victim_sex`)
-
 * The location of each homicide incident, including the `city` and `state` as well as the latitude and longitude (`lat` and `lon`)
-
 * `disposition` -- the status of each homicide case (case closed/open and arrest status)
 
 
@@ -67,7 +60,7 @@ The raw `homicides` dataset from the Washington Post contains `r nrows(homicides
 
 Now, let's create a `city_state` variable combining the `city` and `state` variables (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
 
-Below is a table showing the total number of homicides and the number of unsolved homicides in each city.
+Below is a table showing the total number of homicides and the number of unsolved homicides in each city. These values were also saved to a new dataframe called `homicides_by_city`.
 
 ```{r homicides-by-city}
 homicides = homicides %>%
@@ -90,34 +83,58 @@ homicides_city_table
 Below, I use the `prop.test` function to estimate the proportion of homicides that are unsolved in the city of Baltimore, MD. The output of prop.test is saved as a tidy dataframe called `unsolved_balt`.
 
 ```{r estim-baltimore}
-unsolved_balt = homicides_by_city %>%
+balt_unsolved = homicides_by_city %>% 
   filter(city_state == "Baltimore, MD") %>%
-  select(n_homicides, n_unsolved)
+  pull(n_unsolved) # Number of unsolved homicides in Baltimore
+balt_total = homicides_by_city %>% 
+  filter(city_state == "Baltimore, MD") %>%
+  pull(n_homicides) # Number of total homicides in Baltimore
 
-unsolved_balt = prop.test(x = unsolved_balt$n_unsolved,
-                          n = unsolved_balt$n_homicides) %>%
+unsolved_balt = prop.test(x = balt_unsolved, n = balt_total) %>%
                 broom::tidy()
 ```
 
 From this new dataframe `unsolved_balt`, we pull the values for the estimated proportion and 95% CI of unsolved homicides in Baltimore using inline R:
 
-* **The estimated proportion of unsolved homicides in Baltimore, MD is `r unsolved_balt %>% pull(estimate)` (95% CI: `r unsolved_balt %>% pull(conf.low)`, `r unsolved_balt %>% pull(conf.high)`**
+* **The estimated proportion of unsolved homicides in Baltimore, MD is `r unsolved_balt %>% pull(estimate) %>% round(4)` (95% CI: `r unsolved_balt %>% pull(conf.low) %>% round(4)`, `r unsolved_balt %>% pull(conf.high) %>% round(4)`)**
 
 
-Now run prop.test for each of the cities in your dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Do this within a “tidy” pipeline, making use of purrr::map, purrr::map2, list columns and unnest as necessary to create a tidy dataframe with estimated proportions and CIs for each city.
+### Estimating the proportion of unsolved homicides for all 50 cities
+
+Let's run `prop.test` for each of the cities in the `homicides_by_city` dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Below, I do this within a “tidy” pipeline, making use of purrr::map, purrr::map2, to create a tidy dataframe with estimated proportions and CIs for each city.
+
+The resulting dataframe with estimated proportions and CIs of unsolved homicides for each city is saved as `unsolved_all`.
 
 ```{r estim-all-cities}
-unsolved_all = homicides_by_city
+city_unsolved = homicides_by_city %>% pull(n_unsolved)
+city_total = homicides_by_city %>% pull(n_homicides)
+
+unsolved_all = prop.test(x = city_unsolved,
+                         n = city_total) %>%
+                broom::tidy()
+
+unsolved_all
 ```
 
 
 ### Plot of unsolved homicide estimates & CIs for major cities in the US
 Create a plot that shows the estimates and CIs for each city – check out geom_errorbar for a way to add error bars based on the upper and lower limits. Organize cities according to the proportion of unsolved homicides.
 
+```{r plot-homicides-by-city}
+
+```
+
 
 
 # Problem 3
-When designing an experiment or analysis, a common question is whether it is likely that a true effect will be detected – put differently, whether a false null hypothesis will be rejected. The probability that a false null hypothesis is rejected is referred to as power, and it depends on several factors, including: the sample size; the effect size; and the error variance. In this problem, you will conduct a simulation to explore power in a one-sample t-test.
+When designing an experiment or analysis, a common question is whether it is likely that a true effect will be detected --- put differently, whether a false null hypothesis will be rejected. The probability that a false null hypothesis is rejected is referred to as power, and it depends on several factors, including: the sample size; the effect size; and the error variance. Let's conduct a simulation to explore power in a one-sample t-test.
+
+### Simulation to explore power in a one-sample t-test
+
+
+```{r}
+
+```
 
 First set the following design elements:
 
@@ -131,5 +148,8 @@ For each dataset, save μ̂  and the p-value arising from a test of H:μ=0 using
 
 Repeat the above for μ={1,2,3,4,5,6}, and complete the following:
 
+### Plot showing the power of the one-sample t-test
 Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. Describe the association between effect size and power.
+
+### Plot showing the average estimate μ̂ vs the true value of μ
 Make a plot showing the average estimate of μ̂  on the y axis and the true value of μ on the x axis. Make a second plot (or overlay on the first) the average estimate of μ̂  only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. Is the sample average of μ̂  across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?
