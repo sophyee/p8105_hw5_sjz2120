@@ -161,7 +161,11 @@ We then use a `for` loop to generate 5000 datasets from the model and take a t-t
 #Let's create a function called `simulate` that carries out a one-sample t-test
 simulate = function(n = 30, sigma = 5, mu = 0) {
   input =  rnorm(n, mean = mu, sd = sigma)
-  t_test = t.test(input, conf.int = 0.95) %>% broom::tidy()
+  t_test = t.test(input, conf.int = 0.95) %>%
+    broom::tidy() %>%
+    janitor::clean_names %>%
+    select(estimate, p_value)
+  
   t_test
 }
 
@@ -170,9 +174,7 @@ for (i in 1:5000) {
   simulations[[i]] = simulate()
 }
 simulations = simulations %>%
-  bind_rows() %>%
-  janitor::clean_names %>%
-  select(estimate, p_value)
+  bind_rows()
 ```
 
 Now, let's make a function that will repeat the above simulation process for μ={1,2,3,4,5,6}:
@@ -207,10 +209,8 @@ test_power =
   ) %>%
   unnest(mu_simulations) %>%
   filter(p_value < 0.05) %>%
-  count() %>%
-  mutate(power_of_test = n/5000)
+  count()
 
-test_power
 ```
 ```{r}
 test_power
