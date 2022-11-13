@@ -124,7 +124,22 @@ unsolved_prop_all
 Create a plot that shows the estimates and CIs for each city – check out geom_errorbar for a way to add error bars based on the upper and lower limits. Organize cities according to the proportion of unsolved homicides.
 
 ```{r plot-homicides-by-city}
+homicides_city_plot = unsolved_prop_all %>%
+  mutate(city_state = fct_reorder(city_state, estimate_prop)) %>%
+  ggplot(aes(x = city_state, y = estimate_prop, color = city_state)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
+  labs(title = "Estimated proportions (and 95% Confidence Intervals) of unsolved homicides, by city",
+       subtitle = "For 50 major cities in the U.S.",
+       x = "City (City, State)",
+       y = "Estimated proportion of unsolved homicides (with 95% CI)") +
+  theme(plot.title = element_text(size = 11, hjust = 0.5),
+        plot.subtitle = element_text(size = 10, hjust = 0.5),
+        axis.text.x = element_text(size = 7, angle = 45, hjust = 0.5),
+        axis.text.y = element_text(size = 7, angle = 45, hjust = 0.5),
+        legend.position = "none")
 
+homicides_city_plot
 ```
 
 
