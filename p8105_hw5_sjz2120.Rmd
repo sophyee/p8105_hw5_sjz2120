@@ -171,38 +171,69 @@ for (i in 1:5000) {
 }
 simulations = simulations %>%
   bind_rows()
-
-simulations %>% head()
 ```
 
-Now, let's use this function and repeat the above simulation process for any μ (in this case, let's look at μ={0, 1, 2, 3, 4, 5, 6}):
+Now, let's create a new function `mu_simulate()` that will repeat the above 5000x simulation process for any μ (in this case, let's look at μ={0, 1, 2, 3, 4, 5, 6}):
 
 ```{r simulations-diffr-mu}
-# Let's use simulate() and repeat this process 5000 times for a range of mu_values
-mu_simulations = 
-  tibble(mu_value = c(0, 1, 2, 3, 4, 5, 6)) %>%
-  mutate(output = map(.x = mu_value, ~rerun(5000, simulate(mu = mu_value))),
-         estimates_table = map(output, bind_rows)) %>%
-  select(-output) %>%
-  unnest(estimates_table)
+# Let's create a new function mu_simulate() and repeat this process 5000 times for a range of `mu_value`
+mu_simulate = function(mu_value) {
+  mu_sim = vector("list", 5000)
+  for (i in 1:5000) {
+    mu_sim[[i]] = simulate(mu = mu_value)
+  }
+  sim_output =
+    mu_sim %>%
+    bind_rows()
+    
+  sim_output
+}
 
-mu_simulations %>% head()
+# Let's use the function mu_simulate() to simulate t-tests for 5000 different samples with μ={0, 1, 2, 3, 4, 5, 6}
+mu_simulations =
+  tibble(mu_value = c(0, 1, 2, 3, 4, 5, 6),
+         estimate_table = map(mu_value, mu_simulate)) %>%
+  unnest(estimate_table) %>%
+  mutate(reject_null = ifelse(p.value < 0.05, TRUE, FALSE)) # Add a new variable `reject_null` conditioned on whether or not the null hypothesis is rejected (ie. when the `p.value` is < 0.05)
+
 ```
 
 
 ### Plot showing the power of the one-sample t-test
 Below is a plot showing the proportion of times the null was rejected (the power of the test, in this case when the p-value < 0.05) on the y axis and the true value of μ on the x axis.
 
-* **From the plot below, we see that as the true value of μ (the effect size) increases, the power of the text decreases.**
-
+* **From the plot below, we see that as the true value of μ (the effect size) increases, the power of the test increases until it plateaus.**
 ```{r}
-# Let's add a variable to `mu_simulations` called `reject_null`, which records whether the resulting `p.value` is < 0.05 (i.e. the null hypothesis is rejected)
+ tibble(mu_value = c(0, 1, 2, 3, 4, 5, 6)) %>%
+  mutate(output = map(.x = mu_value, ~rerun(5000, simulate(mu = mu_value))),
+         estimates_table = map(output, bind_rows)) %>%
+  unnest(estimates_table)
+
 mu_simulations = mu_simulations %>%
   mutate(reject_null = ifelse(p.value < 0.05, TRUE, FALSE))
 
-mu_simulations %>%
+group_by(mu_value) %>%
+  summarise(reject_null_prop = (sum(reject_null) / 5000)) %>%
+```
+
+
+```{r plot-showing-power}
+# Let's add a variable to `mu_simulations` called `reject_null`, which records whether the resulting `p.value` is < 0.05 (i.e. the null hypothesis is rejected)
+
+test_power = mu_simulations %>%
   group_by(mu_value) %>%
-  summarise(reject_null_prop = reject_null / n())
+  summarise(reject_null_prop = sum(reject_null) / 5000)
+
+test_power %>%
+  ggplot(aes(x = mu_value, y = reject_null_prop)) +
+  geom_point(alpha = .5, size = 3) +
+  geom_smooth(alpha = .5) +
+  labs(title = "",
+       subtitle = "",
+       x = "",
+       y = "")  +
+  theme(plot.title = element_text(size = 11, hjust = 0.5),
+        plot.subtitle = element_text(size = 10, hjust = 0.5))
 ```
 ```{r}
 
