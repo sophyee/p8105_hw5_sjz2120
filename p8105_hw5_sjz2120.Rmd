@@ -149,13 +149,9 @@ When designing an experiment or analysis, a common question is whether it is lik
 
 ### Simulation to explore power in a one-sample t-test
 
-First we create a function `simulate()` to simulate one-sample t-tests (H:μ=0 using α=0.0) on a random normally distributed dataset with the following elements:
+First we create a function `simulate()` to simulate one-sample t-tests (H:μ=0 using α=0.05) on a random normally distributed dataset (with n=30, σ=5, μ=0); and which outputs a tidied dataset containing the estimate and p-value.
 
-* n=30
-* σ=5
-* μ=0.
-
-We then use a `for` loop to generate 5000 datasets from the model and take a t-test for each of them.
+We then use a `for` loop to generate 5000 datasets from the model and do a t-test for each of them. The outputs (estimate and p-value) of these 5000 t-tests are saved to a tidied table called `simulations`.
 
 ```{r simulation-t-test}
 #Let's create a function called `simulate` that carries out a one-sample t-test
@@ -163,8 +159,7 @@ simulate = function(n = 30, sigma = 5, mu = 0) {
   input =  rnorm(n, mean = mu, sd = sigma)
   t_test = t.test(input, conf.int = 0.95) %>%
     broom::tidy() %>%
-    janitor::clean_names %>%
-    select(estimate, p_value)
+    select(estimate, p.value)
   
   t_test
 }
@@ -175,24 +170,23 @@ for (i in 1:5000) {
 }
 simulations = simulations %>%
   bind_rows()
+simulations
 ```
 
-Now, let's make a function that will repeat the above simulation process for μ={1,2,3,4,5,6}:
+Now, let's use this function and repeat the above simulation process for any μ (in this case, let's look at μ={0, 1, 2, 3, 4, 5, 6}):
 
 ```{r simulations-diffr-mu}
-mu_simulate = function(x) {
-  mu_simulation = vector("list", 5000)
-  for (i in 1:5000) {
-    mu_simulation[[i]] = simulate(mu = x)
-  }
+mu_simulations = 
+  tibble(mu_range = c(0, 1, 2, 3, 4, 5, 6)) %>%
+  mutate()
   
-  sim_output = mu_simulation %>%
-    bind_rows %>%
-    janitor::clean_names() %>%
-    select(estimate, p_value)
-  
-  sim_output
+  vector("list", 5000)
+for (i in 1:5000) {
+  mu_simulations[[i]] = simulate(n = 30, sigma = 5, mu = c(0, 1, 2, 3, 4, 5, 6))
 }
+mu_simulations = mu_simulations %>%
+  bind_rows()
+mu_simulations
 ```
 
 
