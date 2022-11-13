@@ -135,8 +135,8 @@ homicides_city_plot = unsolved_prop_all %>%
        y = "Estimated proportion of unsolved homicides (with 95% CI)") +
   theme(plot.title = element_text(size = 11, hjust = 0.5),
         plot.subtitle = element_text(size = 10, hjust = 0.5),
-        axis.text.x = element_text(size = 7, angle = 45, hjust = 0.5),
-        axis.text.y = element_text(size = 7, angle = 45, hjust = 0.5),
+        axis.text.x = element_text(size = 7, angle = 60, hjust = 0.5),
+        axis.text.y = element_text(size = 7, hjust = 0.5),
         legend.position = "none")
 
 homicides_city_plot
@@ -149,20 +149,29 @@ When designing an experiment or analysis, a common question is whether it is lik
 
 ### Simulation to explore power in a one-sample t-test
 
+First we create a function `simulate()` to simulate one-sample t-tests (H:μ=0 using α=0.0) on a random normally distributed dataset with the following elements:
 
-```{r}
+* n=30
+* σ=5
+* μ=0.
 
+We then use a `for` loop to generate 5000 datasets from the model and take a t-test for each of them.
+
+```{r simulation-t-test}
+#Let's create a function called `simulate` that carries out a one-sample t-test
+simulate = function(n = 30, sigma = 5, mu = 0) {
+  input =  rnorm(n, mean = mu, sd = sigma)
+  t_test = t.test(input, conf.int = 0.95) %>% broom::tidy()
+  t_test
+}
+
+simulations = vector("list", 5000)
+for (i in 1:5000) {
+  simulations[[i]] = simulate()
+}
+simulations %>% bind_rows() %>% select(estimate, p.value)
 ```
 
-First set the following design elements:
-
-Fix n=30
-Fix σ=5
-Set μ=0. Generate 5000 datasets from the model
-
-x∼Normal[μ,σ]
-
-For each dataset, save μ̂  and the p-value arising from a test of H:μ=0 using α=0.05. Hint: to obtain the estimate and p-value, use broom::tidy to clean the output of t.test.
 
 Repeat the above for μ={1,2,3,4,5,6}, and complete the following:
 
