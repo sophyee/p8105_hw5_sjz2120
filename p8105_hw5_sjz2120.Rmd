@@ -29,7 +29,7 @@ Below I've created a tidy data frame `exp_df` containing data from all participa
 
 ### Creating a tidy dataframe for the experimental data
 
-```{r Load-and-clean-P1-data}
+```{r Load-and-clean-P1-data, message=FALSE}
 exp_df =
   tibble(
     files = list.files(path = "data/", full.names = TRUE)
@@ -256,7 +256,7 @@ test_power = mu_simulations %>%
   summarise(reject_null_prop = sum(reject_null) / 5000)
 
 # Now we can create a plot showing the power of the test at each mu value from μ={0, 1, 2, 3, 4, 5, 6}
-test_power_plot %>%
+test_power_plot = test_power %>%
   ggplot(aes(x = mu_value, y = reject_null_prop)) +
     geom_point(alpha = 0.5, size = 3) +
     geom_smooth(alpha = 0.5) +
@@ -268,6 +268,8 @@ test_power_plot %>%
         plot.subtitle = element_text(size = 10, hjust = 0.5),
         axis.text.x = element_text(size = 7),
         axis.text.y = element_text(size = 7))
+
+test_power_plot
 ```
 
 
@@ -317,5 +319,5 @@ estim_true_plot
 
 * From the plot above, we see that the sample average of μ̂  across tests for which the null is rejected is not equal to the true value of μ from around μ = 0 to 4, and instead is larger compared to the true estimated mean (i.e. looking across all samples).
 * However, when μ = 4 and higher, we see that the sample average of μ̂  across tests for which the null is rejected begins to approach/approximately equals the true value of μ.
-  * This is because as the true value of μ (the effect size) increases, the power of the test also increases. Since the power of the test is the proportion of times the null is rejected, a lower power for smaller μ's would mean that the test rejects the null less for for smaller μ's.
+  * This is because as the true value of μ (the effect size) increases, the power of the test also increases. Since the power of the test is the proportion of times the null is rejected, a lower power for smaller μ's would mean that the test rejects the null less for smaller μ's.
   * This in turn leads to the observed difference between the sample average of μ̂  across tests for which the null is rejected vs. the true value of μ.
