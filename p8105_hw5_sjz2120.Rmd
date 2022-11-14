@@ -67,6 +67,7 @@ exp_plot = exp_df %>%
 exp_plot
 ```
 
+From the spaghetti plot of experimental data over time, we see that there is indeed a noticeable difference between the control and experimental arms of the study. In particular, we notice that the control arms seem to have on average lower measurements over time compared to the experimental arm.
 
 
 # Problem 2
