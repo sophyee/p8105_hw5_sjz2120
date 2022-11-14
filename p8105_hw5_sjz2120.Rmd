@@ -19,10 +19,27 @@ set.seed(1)
 # Problem 1
 This zip file contains data from a longitudinal study that included a control arm and an experimental arm. Data for each participant is included in a separate file, and file names include the subject ID and arm.
 
+### Creating a tidy dataframe for the experimental data
+
+```{r Load-and-clean-P1-data}
+exp_df =
+  tibble(
+    files = list.files(path = "data/", full.names = TRUE)
+  ) %>%
+  mutate(data = purrr::map(.x = files, read_csv)) %>%
+  unnest(data) %>%
+  mutate(files = str_replace(files, "data//", "")) %>%
+  separate(files, into = c("arm", "participant"), sep = "_")
+
+exp_df
+```
+
+
 Create a tidy dataframe containing data from all participants, including the subject ID, arm, and observations over time:
 
 Start with a dataframe containing all file names; the list.files function will help
 Iterate over file names and read in data for each subject using purrr::map and saving the result as a new variable in the dataframe
+
 Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
 Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
 
@@ -233,7 +250,8 @@ test_power_plot %>%
 
 Below is a plot showing the average estimate of μ on the y axis and the true value of μ on the x axis, separated into two lines -- one for all samples and one for only those samples for which the null was rejected.
 
-```{r}
+```{r plot-comparing-estim-true-means}
+# Let's start by creating two new dataframes `test_estimates_all` and `test_estimates_reject` summarizing the average estimates for the two different groups of samples
 test_estimates_all = mu_simulations %>%
   group_by(mu_value) %>%
   summarise(avg_estim_all_samples = mean(estimate))
@@ -243,6 +261,7 @@ test_estimates_reject = mu_simulations %>%
   filter(reject_null == TRUE) %>%
   summarise(avg_estim_reject_null = mean(estimate))
 
+# Let's combine the above two dataframes into `test_estimates_combine`, so we have the average estimates grouped by true value of mu all in one df, and in a pivot_longer format
 test_estimates_combine =
   full_join(test_estimates_all, test_estimates_reject, by = "mu_value") %>%
   pivot_longer(
@@ -251,6 +270,7 @@ test_estimates_combine =
     names_prefix = "avg_estim_",
     values_to = "avg_estim")
 
+# Now we can create a plot comparing the average estimate mean vs. the true population
 estim_true_plot =
   test_estimates_combine %>%
   ggplot(aes(x = mu_value, y = avg_estim, group = sample)) +
