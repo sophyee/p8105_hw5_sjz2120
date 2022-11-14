@@ -11,13 +11,21 @@ library(rvest)
 library(patchwork)
 
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+scale_colour_discrete = scale_color_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
 
 set.seed(1)
 ```
 
 
 # Problem 1
-This zip file contains data from a longitudinal study that included a control arm and an experimental arm. Data for each participant is included in a separate file, and file names include the subject ID and arm.
+In the "data" folder in this R Project, there are 20 .csv files containing data from a longitudinal study that included a control arm and an experimental arm.
+
+Below I've created a tidy data frame `exp_df` containing data from all participants in the 20 .csv files. To do so, I used the list.files function, and iterated over file names to read in data for each subject using purrr::map before saving the result as a new variable in the dataframe. I then tidied the data further, so the final cleaned `exp_df` dataframe includes the subject ID, arm, and observations over time.
 
 ### Creating a tidy dataframe for the experimental data
 
@@ -28,20 +36,36 @@ exp_df =
   ) %>%
   mutate(data = purrr::map(.x = files, read_csv)) %>%
   unnest(data) %>%
-  mutate(files = str_replace(files, "data//", "")) %>%
-  separate(files, into = c("arm", "participant"), sep = "_")
+  mutate(files = str_replace(files, "data//", ""),
+         files = str_replace(files, ".csv", "")) %>%
+  separate(files, into = c("arm", "subject_id"), sep = "_") %>%
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week",
+    names_prefix = "week_",
+    values_to = "observation") %>%
+  mutate(week = as.numeric(week)) %>%
+  mutate(arm = str_replace(arm, "con", "control"),
+         arm = str_replace(arm, "exp", "experimental"))
 
 exp_df
 ```
 
 
-Create a tidy dataframe containing data from all participants, including the subject ID, arm, and observations over time:
+### Spaghetti plot showing observations on each subject over time
+Now, let's make a spaghetti plot showing observations on each subject over time so we can see if there are differences between the control vs experimental group.
 
-Start with a dataframe containing all file names; the list.files function will help
-Iterate over file names and read in data for each subject using purrr::map and saving the result as a new variable in the dataframe
+```{r spaghetti-plot-expdf}
+exp_plot = exp_df %>%
+  ggplot(aes(x = week, y = observation)) +
+    geom_path(aes(color = arm, group = as.factor(subject_id)), alpha = 0.5) +
+    labs(title = "",
+         subtitle = "Experimental Data Over Time",
+         x = "Week",
+         y = "Measurement")
 
-Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
-Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
+exp_plot
+```
 
 
 
@@ -149,10 +173,10 @@ homicides_city_plot = unsolved_prop_all %>%
   ggplot(aes(x = city_state, y = estimate_prop, color = city_state)) +
     geom_point() +
     geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
-    labs(title = "Estimated proportions (and 95% Confidence Intervals) of unsolved homicides, by city",
+    labs(title = "Estimated proportions & 95% confidence intervals of unsolved homicides, by city",
           subtitle = "For 50 major cities in the U.S.",
           x = "City (City, State)",
-          y = "Estimated proportion of unsolved homicides (with 95% CI)") +
+          y = "Estimated proportion of unsolved homicides (w/95% CI)") +
     theme(plot.title = element_text(size = 11, hjust = 0.5),
           plot.subtitle = element_text(size = 10, hjust = 0.5),
           axis.text.x = element_text(size = 7, angle = 45, hjust = 1),
