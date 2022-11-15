@@ -57,8 +57,9 @@ Now, let's make a spaghetti plot showing observations on each subject over time.
 
 ```{r spaghetti-plot-expdf}
 exp_plot = exp_df %>%
+  unite("arm_subject", c(arm, subject_id), sep = "_", remove = FALSE) %>%
   ggplot(aes(x = week, y = observation)) +
-    geom_path(aes(color = arm, group = as.factor(subject_id)), alpha = 0.5) +
+    geom_path(aes(color = arm, group = as.factor(arm_subject)), alpha = 0.5) +
     labs(title = "",
          subtitle = "Experimental Data Over Time",
          x = "Week",
