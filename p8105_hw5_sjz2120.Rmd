@@ -32,21 +32,21 @@ Below I've created a tidy data frame `exp_df` containing data from all participa
 ```{r Load-and-clean-P1-data, message=FALSE}
 exp_df =
   tibble(
-    files = list.files(path = "data/", full.names = TRUE)
-  ) %>%
-  mutate(data = purrr::map(.x = files, read_csv)) %>%
-  unnest(data) %>%
-  mutate(files = str_replace(files, "data//", ""),
-         files = str_replace(files, ".csv", "")) %>%
-  separate(files, into = c("arm", "subject_id"), sep = "_") %>%
+    files = list.files("data/"),
+    path = str_c("data/", files)
+  ) %>% 
+  mutate(data = map(path, read_csv)) %>% 
+  unnest() %>%
+  mutate(
+    files = str_replace(files, ".csv", ""),
+    group = str_sub(files, 1, 3)) %>% 
   pivot_longer(
     week_1:week_8,
     names_to = "week",
-    names_prefix = "week_",
-    values_to = "observation") %>%
-  mutate(week = as.numeric(week)) %>%
-  mutate(arm = str_replace(arm, "con", "control"),
-         arm = str_replace(arm, "exp", "experimental"))
+    values_to = "outcome",
+    names_prefix = "week_") %>% 
+  mutate(week = as.numeric(week)) %>% 
+  select(group, subject = files, week, outcome)
 
 exp_df
 ```
@@ -57,13 +57,13 @@ Now, let's make a spaghetti plot showing observations on each subject over time.
 
 ```{r spaghetti-plot-expdf}
 exp_plot = exp_df %>%
-  unite("arm_subject", c(arm, subject_id), sep = "_", remove = FALSE) %>%
-  ggplot(aes(x = week, y = observation)) +
-    geom_path(aes(color = arm, group = as.factor(arm_subject)), alpha = 0.5) +
-    labs(title = "",
-         subtitle = "Experimental Data Over Time",
-         x = "Week",
-         y = "Measurement")
+  ggplot(aes(x = week, y = outcome, group = subject, color = group)) + 
+  geom_point() + 
+  geom_path() + 
+  facet_grid(~group) +
+  labs(title = "Experimental Data Over Time",
+      x = "Week",
+      y = "Measurement")
 
 exp_plot
 ```
